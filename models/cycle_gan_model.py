@@ -219,6 +219,18 @@ class CycleGANModel(BaseModel):
             ret_visuals['idt_B'] = util.tensor2im(self.idt_B)
         return ret_visuals
 
+    def save_current_spec(self):
+        spec_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
+        if not os.path.exists(spec_dir):
+            os.makedirs(spec_dir)
+        specs = OrderedDict([('real_A', self.input_A), ('fake_B', self.fake_B), ('rec_A', self.rec_A),
+                         ('real_B', self.input_B), ('fake_A', self.fake_A), ('rec_B', self.rec_B)])
+        for label, spec_tensor in specs.items():
+            spec_name = '%s_%s.png' % (self.get_image_paths(), label)
+            save_path = os.path.join(spec_dir, spec_name)
+            np.save(save_path, spec_tensor[0].cpu().float().numpy())
+
+
     def save(self, label):
         self.save_network(self.netG_A, 'G_A', label, self.gpu_ids)
         self.save_network(self.netD_A, 'D_A', label, self.gpu_ids)

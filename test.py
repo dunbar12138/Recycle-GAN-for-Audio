@@ -15,19 +15,20 @@ opt.no_flip = True  # no flip
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 model = create_model(opt)
-visualizer = Visualizer(opt)
+# visualizer = Visualizer(opt)
 # create website
-web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
-webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
+# web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
+# webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
 # test
 for i, data in enumerate(dataset):
     if i >= opt.how_many:
         break
     model.set_input(data)
     model.test()
-    visuals = model.get_current_visuals()
+    # visuals = model.get_current_visuals()
     img_path = model.get_image_paths()
     print('%04d: process image... %s' % (i, img_path))
-    visualizer.save_images(webpage, visuals, img_path)
+    # visualizer.save_images(webpage, visuals, img_path)
+    model.save_current_spec()
 
-webpage.save()
+# webpage.save()

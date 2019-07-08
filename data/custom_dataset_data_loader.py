@@ -10,6 +10,12 @@ def CreateDataset(opt):
     elif opt.dataset_mode == 'unaligned_triplet':
         from data.unaligned_triplet_dataset import UnalignedTripletDataset
         dataset = UnalignedTripletDataset()
+    elif opt.dataset_mode == 'triplet_spectrogram':
+        from data.triplet_spectrogram_dataset import UnalignedTripletSpectrogramDataset
+        dataset = UnalignedTripletSpectrogramDataset()
+    elif opt.dataset_mode == 'spectrogram':
+        from data.spectrogram_dataset import UnalignedSpectrogramDataset
+        dataset = UnalignedSpectrogramDataset()
     else:
         raise ValueError("Dataset [%s] not recognized." % opt.dataset_mode)
 
