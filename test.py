@@ -29,6 +29,6 @@ for i, data in enumerate(dataset):
     img_path = model.get_image_paths()
     print('%04d: process image... %s' % (i, img_path))
     # visualizer.save_images(webpage, visuals, img_path)
-    model.save_current_spec()
+    model.save_current_spec(opt)
 
 # webpage.save()
