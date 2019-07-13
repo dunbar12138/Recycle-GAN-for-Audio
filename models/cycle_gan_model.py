@@ -121,12 +121,12 @@ class CycleGANModel(BaseModel):
     def backward_D_A(self):
         fake_B = self.fake_B_pool.query(self.fake_B)
         loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)
-        self.loss_D_A = loss_D_A.data[0]
+        self.loss_D_A = loss_D_A.data.item()
 
     def backward_D_B(self):
         fake_A = self.fake_A_pool.query(self.fake_A)
         loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)
-        self.loss_D_B = loss_D_B.data[0]
+        self.loss_D_B = loss_D_B.data.item()
 
     def backward_G(self):
         lambda_idt = self.opt.identity
@@ -143,8 +143,8 @@ class CycleGANModel(BaseModel):
 
             self.idt_A = idt_A.data
             self.idt_B = idt_B.data
-            self.loss_idt_A = loss_idt_A.data[0]
-            self.loss_idt_B = loss_idt_B.data[0]
+            self.loss_idt_A = loss_idt_A.data.item()
+            self.loss_idt_B = loss_idt_B.data.item()
         else:
             loss_idt_A = 0
             loss_idt_B = 0
@@ -177,10 +177,10 @@ class CycleGANModel(BaseModel):
         self.rec_A = rec_A.data
         self.rec_B = rec_B.data
 
-        self.loss_G_A = loss_G_A.data[0]
-        self.loss_G_B = loss_G_B.data[0]
-        self.loss_cycle_A = loss_cycle_A.data[0]
-        self.loss_cycle_B = loss_cycle_B.data[0]
+        self.loss_G_A = loss_G_A.data.item()
+        self.loss_G_B = loss_G_B.data.item()
+        self.loss_cycle_A = loss_cycle_A.data.item()
+        self.loss_cycle_B = loss_cycle_B.data.item()
 
     def optimize_parameters(self):
         # forward
@@ -232,6 +232,14 @@ class CycleGANModel(BaseModel):
             spec_name = '%s_%s' % (name, label)
             save_path = os.path.join(spec_dir, spec_name)
             np.save(save_path, spec_tensor[0].cpu().float().numpy())
+
+    def get_current_spec(self):
+        specs_tensor = [('real_A', self.input_A), ('fake_B', self.fake_B), ('rec_A', self.rec_A),
+                ('real_B', self.input_B), ('fake_A', self.fake_A), ('rec_B', self.rec_B)]
+        ret_specs = OrderedDict([(name, tensor[0].cpu().float().numpy())
+                                 for name, tensor in specs_tensor])
+        return ret_specs
+
 
 
     def save(self, label):

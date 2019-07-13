@@ -42,6 +42,24 @@ class HTML:
                             br()
                             p(txt)
 
+    def add_audios(self, amps, angs, auds, txts, width=400):
+        self.add_table()
+        with self.t:
+            with tr():
+                for amp, ang, aud, txt in zip(amps, angs, auds, txts):
+                    with td(style="word-wrap: break-word;", halign="center", valign="top"):
+                        with p():
+                            with a(href=os.path.join('images', amp)):
+                                img(style="width:%dpx" % width, src=os.path.join('images', amp))
+                            br()
+                            with a(href=os.path.join('images', ang)):
+                                img(style="width:%dpx" % width, src=os.path.join('images', ang))
+                            br()
+                            with audio(controls="controls"):
+                                source(src=os.path.join('audios', aud), type="audio/wav")
+                            br()
+                            p(txt)
+
     def save(self):
         html_file = '%s/index.html' % self.web_dir
         f = open(html_file, 'wt')

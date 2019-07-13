@@ -3,12 +3,22 @@ from options.train_options import TrainOptions
 from data.data_loader import CreateDataLoader
 from models.models import create_model
 from util.visualizer import Visualizer
+import copy
 
 opt = TrainOptions().parse()
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 dataset_size = len(data_loader)
 print('#training images = %d' % dataset_size)
+
+opt_test = copy.deepcopy(opt)
+opt_test.nThreads = 1   # test code only supports nThreads = 1
+opt_test.batchSize = 1  # test code only supports batchSize = 1
+opt_test.serial_batches = True  # no shuffle
+opt_test.no_flip = True  # no flip
+
+data_loader_test = CreateDataLoader(opt_test)
+dataset_test = data_loader_test.load_data()
 
 model = create_model(opt)
 visualizer = Visualizer(opt)
@@ -41,6 +51,16 @@ for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
             print('saving the latest model (epoch %d, total_steps %d)' %
                   (epoch, total_steps))
             model.save('latest')
+
+    # test after each epoch
+    for i, data in enumerate(dataset_test):
+        if i >= 20:
+            break
+        model.set_input(data)
+        model.test()
+        visualizer.save_specs(model.get_current_spec(), i)
+    visualizer.display_current_audio(epoch)
+        # TODO
 
     if epoch % opt.save_epoch_freq == 0:
         print('saving the model at the end of epoch %d, iters %d' %

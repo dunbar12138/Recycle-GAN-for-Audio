@@ -4,6 +4,11 @@ import ntpath
 import time
 from . import util
 from . import html
+import glob
+from . import wav_util
+from scipy.io import wavfile
+from PIL import Image
+import matplotlib.pyplot as plt
 
 
 class Visualizer():
@@ -22,8 +27,9 @@ class Visualizer():
         if self.use_html:
             self.web_dir = os.path.join(opt.checkpoints_dir, opt.name, 'web')
             self.img_dir = os.path.join(self.web_dir, 'images')
+            self.aud_dir = os.path.join(self.web_dir, 'audios')
             print('create web directory %s...' % self.web_dir)
-            util.mkdirs([self.web_dir, self.img_dir])
+            util.mkdirs([self.web_dir, self.img_dir, self.aud_dir])
         self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
         with open(self.log_name, "a") as log_file:
             now = time.strftime("%c")
@@ -142,3 +148,45 @@ class Visualizer():
             txts.append(label)
             links.append(image_name)
         webpage.add_images(ims, txts, links, width=self.win_size)
+
+    def save_specs(self, specs, i):
+        for label, spec in specs.items():
+            spec_name = '%s_%s' % (str(i).zfill(3), label)
+            save_path = os.path.join(self.aud_dir, spec_name)
+            np.save(save_path, spec)
+
+    def display_current_audio(self, epoch, sample_rate=44100):
+        if self.use_html:
+            # labels = ["fakeA", "fakeB", "realA", "realB"]
+            labels = ["realA", "fakeB", "reconstA",
+                      "realB", "fakeA", "reconstB"]
+            wav_filenames = ["epoch%d_%s.wav" % (epoch, label) for label in labels]
+            wavs = wav_util.spec2wav(self.aud_dir)
+            for wav, filename in zip(wavs, wav_filenames):
+                wavfile.write(os.path.join(self.aud_dir, filename), sample_rate, wav)
+            img_filenames = ["epoch%d_%s.png" % (epoch, label) for label in labels]
+            amps, angles = wav_util.spec2img(self.aud_dir)
+            for amp, angle, filename in zip(amps, angles, img_filenames):
+                # amp_pil = Image.fromarray(amp)
+                # amp_pil.save(os.path.join(self.img_dir, "amp_"+filename))
+                # ang_pil = Image.fromarray(angle)
+                # ang_pil.save(os.path.join(self.img_dir, "ang_"+filename))
+                plt.imshow(amp)
+                plt.savefig(os.path.join(self.img_dir, "amp_"+filename))
+                plt.imshow(angle)
+                plt.savefig(os.path.join(self.img_dir, "ang_" + filename))
+            webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, reflesh=1)
+            for n in range(epoch, 0, -1):
+                webpage.add_header('epoch [%d]' % n)
+                amps = []
+                angs = []
+                auds = []
+                txts = []
+                # links = []
+                for label in labels:
+                    amps.append("amp_epoch%d_%s.png" % (n, label))
+                    angs.append("ang_epoch%d_%s.png" % (n, label))
+                    auds.append("epoch%d_%s.wav" % (n, label))
+                    txts.append(label)
+                webpage.add_audios(amps, angs, auds, txts, width=self.win_size)
+            webpage.save()
